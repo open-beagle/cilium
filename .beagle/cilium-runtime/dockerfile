@@ -1,0 +1,54 @@
+ARG UBUNTU_IMAGE
+ARG GOPS_IMAGE
+ARG CNI_IMAGE
+ARG LLVM_IMAGE
+ARG BPF_IMAGE
+ARG IPROUTE_IMAGE
+
+#
+# Cilium runtime base image
+#
+FROM ${UBUNTU_IMAGE} as runtime-base
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y --no-install-recommends \
+      # Additional iproute2 runtime dependencies
+      libelf1 libmnl0 \
+      # Bash completion for Cilium
+      bash-completion \
+      # Additional misc runtime dependencies
+      iptables kmod ca-certificates && \
+    apt-get purge --auto-remove && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+# Add support for auto-detection of iptables mode
+COPY iptables-wrapper /usr/sbin/iptables-wrapper
+RUN update-alternatives \
+      --install /usr/sbin/iptables iptables /usr/sbin/iptables-wrapper 100 \
+      --slave /usr/sbin/iptables-restore iptables-restore /usr/sbin/iptables-wrapper \
+      --slave /usr/sbin/iptables-save iptables-save /usr/sbin/iptables-wrapper && \
+    update-alternatives \
+      --install /usr/sbin/ip6tables ip6tables /usr/sbin/iptables-wrapper 100 \
+      --slave /usr/sbin/ip6tables-restore ip6tables-restore /usr/sbin/iptables-wrapper \
+      --slave /usr/sbin/ip6tables-save ip6tables-save /usr/sbin/iptables-wrapper
+
+FROM ${GOPS_IMAGE} as gops
+FROM ${CNI_IMAGE} as cni
+FROM ${LLVM_IMAGE} as llvm
+FROM ${BPF_IMAGE} as bpftool
+FROM ${IPROUTE_IMAGE} as iproute2
+
+#
+# Stripped cilium runtime base image
+#
+FROM runtime-base
+LABEL maintainer="maintainer@cilium.io"
+
+ARG ARCH
+
+COPY --from=llvm /out/linux/${ARCH}/bin /usr/local/bin
+COPY --from=bpftool /out/linux/${ARCH}/bin /usr/local/bin
+COPY --from=iproute2 /out/linux/${ARCH}/bin /usr/local/bin
+COPY --from=iproute2 /out/linux/${ARCH}/lib64 /usr/lib
+COPY --from=gops /out/gops-linux-${ARCH} /bin/gops
+COPY --from=cni /data/input /cni

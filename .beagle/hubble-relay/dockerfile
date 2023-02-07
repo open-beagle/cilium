@@ -1,0 +1,18 @@
+ARG BASE
+
+FROM $BASE
+
+ARG AUTHOR
+ARG VERSION
+
+LABEL maintainer=$AUTHOR version=$VERSION
+
+ARG TARGETOS
+ARG TARGETARCH
+
+COPY ./usr/bin/hubble-relay /usr/bin/hubble-relay
+
+WORKDIR /
+ENV GOPS_CONFIG_DIR=/
+
+CMD ["/usr/bin/hubble-relay"]
