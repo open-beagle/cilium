@@ -83,7 +83,7 @@ cilium-agent [flags]
       --enable-bpf-clock-probe                                  Enable BPF clock source probing for more efficient tick retrieval
       --enable-bpf-masquerade                                   Masquerade packets from endpoints leaving the host with BPF instead of iptables
       --enable-bpf-tproxy                                       Enable BPF-based proxy redirection, if support available
-      --enable-cilium-endpoint-slice                            If set to true, CiliumEndpointSlice feature is enabled and cilium agent watch for CiliumEndpointSlice instead of CiliumEndpoint to update the IPCache.
+      --enable-cilium-endpoint-slice                            Enable the CiliumEndpointSlice watcher in place of the CiliumEndpoint watcher (beta)
       --enable-custom-calls                                     Enable tail call hooks for custom eBPF programs
       --enable-endpoint-health-checking                         Enable connectivity health checking between virtual endpoints (default true)
       --enable-endpoint-routes                                  Use per endpoint routes instead of routing via cilium_host
@@ -99,6 +99,7 @@ cilium-agent [flags]
       --enable-identity-mark                                    Enable setting identity mark for local traffic (default true)
       --enable-ip-masq-agent                                    Enable BPF ip-masq-agent
       --enable-ipsec                                            Enable IPSec support
+      --enable-ipsec-key-watcher                                Enable watcher for IPsec key. If disabled, a restart of the agent will be necessary on key rotations. (default true)
       --enable-ipv4                                             Enable IPv4 support (default true)
       --enable-ipv4-egress-gateway                              Enable egress gateway for IPv4
       --enable-ipv4-fragment-tracking                           Enable IPv4 fragments tracking for L4-based lookups (default true)

@@ -17,6 +17,9 @@ const (
 	// Node is a host machine in the cluster, running cilium
 	Node = "node"
 
+	// NodeID is the node-scoped ID of the node as allocated by the agent
+	NodeID = "nodeID"
+
 	// NodeName is a human readable name for the node
 	NodeName = "nodeName"
 
@@ -572,6 +575,10 @@ const (
 	// SourceIP is a source IP
 	SourceIP = "sourceIP"
 
+	DestinationIP = "destinationIP"
+
+	SourceCIDR = "sourceCIDR"
+
 	// DestinationCIDR is a destination CIDR
 	DestinationCIDR = "destinationCIDR"
 
@@ -589,4 +596,16 @@ const (
 
 	// IPSec old SPI
 	OldSPI = "oldSPI"
+
+	// Number of Backends failed while restoration.
+	RestoredBackends = "restoredBackends"
+
+	// Number of Backends failed while restoration.
+	FailedBackends = "failedBackends"
+
+	// Number of Services failed while restoration.
+	RestoredSVCs = "restoredServices"
+
+	// Number of Services failed while restoration.
+	FailedSVCs = "failedServices"
 )

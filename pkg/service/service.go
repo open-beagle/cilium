@@ -24,6 +24,7 @@ import (
 	"github.com/cilium/cilium/pkg/service/healthserver"
 
 	"github.com/sirupsen/logrus"
+	"go.uber.org/multierr"
 )
 
 var (
@@ -479,20 +480,28 @@ func (s *Service) GetDeepCopyServices() []*lb.SVC {
 
 // RestoreServices restores services from BPF maps.
 //
+// It first restores all the service entries, followed by backend entries.
+// In the process, it deletes any duplicate backend entries that were leaked, and
+// are not referenced by any service entries.
+//
 // The method should be called once before establishing a connectivity
 // to kube-apiserver.
 func (s *Service) RestoreServices() error {
 	s.Lock()
 	defer s.Unlock()
-
-	// Restore backend IDs
-	if err := s.restoreBackendsLocked(); err != nil {
-		return err
-	}
+	var errs error
+	backendsById := make(map[lb.BackendID]struct{})
 
 	// Restore service cache from BPF maps
-	if err := s.restoreServicesLocked(); err != nil {
-		return err
+	if err := s.restoreServicesLocked(backendsById); err != nil {
+		errs = multierr.Append(errs,
+			fmt.Errorf("error while restoring services: %w", err))
+	}
+
+	// Restore backend IDs
+	if err := s.restoreBackendsLocked(backendsById); err != nil {
+		errs = multierr.Append(errs,
+			fmt.Errorf("error while restoring backends: %w", err))
 	}
 
 	// Remove LB source ranges for no longer existing services
@@ -502,7 +511,7 @@ func (s *Service) RestoreServices() error {
 		}
 	}
 
-	return nil
+	return errs
 }
 
 // deleteOrphanAffinityMatchesLocked removes affinity matches which point to
@@ -849,7 +858,8 @@ func (s *Service) upsertServiceIntoLBMaps(svc *svcInfo, onlyLocalBackends bool,
 	return nil
 }
 
-func (s *Service) restoreBackendsLocked() error {
+func (s *Service) restoreBackendsLocked(svcBackendsById map[lb.BackendID]struct{}) error {
+	failed, restored := 0, 0
 	backends, err := s.lbmap.DumpBackendMaps()
 	if err != nil {
 		return fmt.Errorf("Unable to dump backend maps: %s", err)
@@ -860,14 +870,50 @@ func (s *Service) restoreBackendsLocked() error {
 			logfields.BackendID: b.ID,
 			logfields.L3n4Addr:  b.L3n4Addr.String(),
 		}).Debug("Restoring backend")
-		if err := RestoreBackendID(b.L3n4Addr, b.ID); err != nil {
-			return fmt.Errorf("Unable to restore backend ID %d for %q: %s",
-				b.ID, b.L3n4Addr, err)
+		if _, ok := svcBackendsById[b.ID]; !ok && s.backendRefCount[b.L3n4Addr.Hash()] != 0 {
+			// If a backend by id isn't referenced by any of the service entries,
+			// it's likely to be a duplicate backend. This can happen when agent
+			// leaked backend entries in the backends map prior to restart, and created
+			// duplicate with different IDs but same L3n4Addr (hash).
+			// As none of the service entries have a reference to these backends
+			// in the services map, the duplicate backends were not available for
+			// load-balancing new traffic. While there is a slim chance that the
+			// duplicate backends could have previously established active connections,
+			// and these connections can get disrupted. However, the leaks likely
+			// happened when service entries were deleted, so those connections
+			// were also expected to be terminated.
+			// Regardless, delete the duplicates as this can affect restoration of current
+			// active backends, and may prevent new backends getting added as map
+			// size is limited, which can result in connectivity issues.
+			id := b.ID
+			DeleteBackendID(id)
+			if err := s.lbmap.DeleteBackendByID(id, b.L3n4Addr.IsIPv6()); err != nil {
+				log.Errorf("unable to delete duplicate backend: %v", id)
+			}
+			log.WithFields(logrus.Fields{
+				logfields.BackendID: b.ID,
+				logfields.L3n4Addr:  b.L3n4Addr,
+			}).Debug("Duplicate backend entry not restored")
+			failed++
+			continue
 		}
-
+		if err := RestoreBackendID(b.L3n4Addr, b.ID); err != nil {
+			log.WithError(err).WithFields(logrus.Fields{
+				logfields.BackendID: b.ID,
+				logfields.L3n4Addr:  b.L3n4Addr,
+			}).Warning("Unable to restore backend")
+			failed++
+			continue
+		}
+		restored++
 		hash := b.L3n4Addr.Hash()
 		s.backendByHash[hash] = b
 	}
+
+	log.WithFields(logrus.Fields{
+		logfields.RestoredBackends: restored,
+		logfields.FailedBackends:   failed,
+	}).Info("Restored backends from maps")
 
 	return nil
 }
@@ -889,7 +935,7 @@ func (s *Service) deleteOrphanBackends() error {
 	return nil
 }
 
-func (s *Service) restoreServicesLocked() error {
+func (s *Service) restoreServicesLocked(svcBackendsById map[lb.BackendID]struct{}) error {
 	failed, restored := 0, 0
 
 	svcs, errors := s.lbmap.DumpServiceMaps()
@@ -932,6 +978,7 @@ func (s *Service) restoreServicesLocked() error {
 			hash := backend.L3n4Addr.Hash()
 			s.backendRefCount.Add(hash)
 			newSVC.backendByHash[hash] = &svc.Backends[j]
+			svcBackendsById[backend.ID] = struct{}{}
 		}
 
 		// Recalculate Maglev lookup tables if the maps were removed due to
@@ -945,7 +992,8 @@ func (s *Service) restoreServicesLocked() error {
 				backends[b.String()] = b.ID
 			}
 			if err := s.lbmap.UpsertMaglevLookupTable(uint16(newSVC.frontend.ID), backends, ipv6); err != nil {
-				return err
+				scopedLog.WithError(err).Warning("Unable to upsert into the Maglev BPF map.")
+				continue
 			}
 		}
 
@@ -955,8 +1003,8 @@ func (s *Service) restoreServicesLocked() error {
 	}
 
 	log.WithFields(logrus.Fields{
-		"restored": restored,
-		"failed":   failed,
+		logfields.RestoredSVCs: restored,
+		logfields.FailedSVCs:   failed,
 	}).Info("Restored services from maps")
 
 	return nil
@@ -973,7 +1021,7 @@ func (s *Service) deleteServiceLocked(svc *svcInfo) error {
 	})
 	scopedLog.Debug("Deleting service")
 
-	if err := s.lbmap.DeleteService(svc.frontend, len(svc.backends), svc.useMaglev()); err != nil {
+	if err := s.lbmap.DeleteService(svc.frontend, svc.activeBackendsCount, svc.useMaglev()); err != nil {
 		return err
 	}
 
