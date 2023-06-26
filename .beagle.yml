@@ -76,7 +76,7 @@ steps:
       cwd: ./.buildx/cilium/linux/amd64
       base: registry.cn-qingdao.aliyuncs.com/wod-arm/cilium-runtime:v1.9-20211011-amd64
       repo: wod/cilium
-      version: v1.11.13
+      version: v1.11.18
       channel: amd64
       args: 'TARGETOS=linux,TARGETARCH=amd64'
       registry: registry.cn-qingdao.aliyuncs.com
@@ -95,7 +95,7 @@ steps:
       cwd: ./.buildx/cilium/linux/arm64
       base: registry.cn-qingdao.aliyuncs.com/wod-arm/cilium-runtime:v1.9-20211011-arm64
       repo: wod/cilium
-      version: v1.11.13
+      version: v1.11.18
       channel: arm64
       args: 'TARGETOS=linux,TARGETARCH=arm64'
       registry: registry.cn-qingdao.aliyuncs.com
@@ -114,7 +114,7 @@ steps:
       cwd: ./.buildx/cilium/linux/ppc64le
       base: registry.cn-qingdao.aliyuncs.com/wod-arm/cilium-runtime:v1.9-20211011-ppc64le
       repo: wod/cilium
-      version: v1.11.13
+      version: v1.11.18
       channel: ppc64le
       args: 'TARGETOS=linux,TARGETARCH=ppc64le'
       registry: registry.cn-qingdao.aliyuncs.com
@@ -202,7 +202,7 @@ steps:
       cwd: ./.buildx/hubble-relay/linux/amd64
       base: registry.cn-qingdao.aliyuncs.com/wod/alpine:3-amd64
       repo: wod/cilium-hubble-relay
-      version: v1.11.13
+      version: v1.11.18
       channel: amd64
       args: 'TARGETOS=linux,TARGETARCH=amd64'
       registry: registry.cn-qingdao.aliyuncs.com
@@ -221,7 +221,7 @@ steps:
       cwd: ./.buildx/hubble-relay/linux/arm64
       base: registry.cn-qingdao.aliyuncs.com/wod/alpine:3-arm64
       repo: wod/cilium-hubble-relay
-      version: v1.11.13
+      version: v1.11.18
       channel: arm64
       args: 'TARGETOS=linux,TARGETARCH=arm64'
       registry: registry.cn-qingdao.aliyuncs.com
@@ -240,7 +240,7 @@ steps:
       cwd: ./.buildx/hubble-relay/linux/ppc64le
       base: registry.cn-qingdao.aliyuncs.com/wod/alpine:3-ppc64le
       repo: wod/cilium-hubble-relay
-      version: v1.11.13
+      version: v1.11.18
       channel: ppc64le
       args: 'TARGETOS=linux,TARGETARCH=ppc64le'
       registry: registry.cn-qingdao.aliyuncs.com
@@ -328,7 +328,7 @@ steps:
       cwd: ./.buildx/operator-generic/linux/amd64
       base: registry.cn-qingdao.aliyuncs.com/wod/alpine:3-amd64
       repo: wod/cilium-operator-generic
-      version: v1.11.13
+      version: v1.11.18
       channel: amd64
       args: 'TARGETOS=linux,TARGETARCH=amd64'
       registry: registry.cn-qingdao.aliyuncs.com
@@ -347,7 +347,7 @@ steps:
       cwd: ./.buildx/operator-generic/linux/arm64
       base: registry.cn-qingdao.aliyuncs.com/wod/alpine:3-arm64
       repo: wod/cilium-operator-generic
-      version: v1.11.13
+      version: v1.11.18
       channel: arm64
       args: 'TARGETOS=linux,TARGETARCH=arm64'
       registry: registry.cn-qingdao.aliyuncs.com
@@ -366,7 +366,7 @@ steps:
       cwd: ./.buildx/operator-generic/linux/ppc64le
       base: registry.cn-qingdao.aliyuncs.com/wod/alpine:3-ppc64le
       repo: wod/cilium-operator-generic
-      version: v1.11.13
+      version: v1.11.18
       channel: ppc64le
       args: 'TARGETOS=linux,TARGETARCH=ppc64le'
       registry: registry.cn-qingdao.aliyuncs.com
@@ -392,8 +392,8 @@ steps:
     image: registry.cn-qingdao.aliyuncs.com/wod/devops-docker-manifest:1.0
     settings:
       platforms: linux/amd64,linux/arm64,linux/ppc64le
-      template: registry.cn-qingdao.aliyuncs.com/wod/cilium:v1.11.13-ARCH
-      target: registry.cn-qingdao.aliyuncs.com/wod/cilium:v1.11.13
+      template: registry.cn-qingdao.aliyuncs.com/wod/cilium:v1.11.18-ARCH
+      target: registry.cn-qingdao.aliyuncs.com/wod/cilium:v1.11.18
       username:
         from_secret: REGISTRY_USER_ALIYUN
       password:
@@ -416,8 +416,8 @@ steps:
     image: registry.cn-qingdao.aliyuncs.com/wod/devops-docker-manifest:1.0
     settings:
       platforms: linux/amd64,linux/arm64,linux/ppc64le
-      template: registry.cn-qingdao.aliyuncs.com/wod/cilium-hubble-relay:v1.11.13-ARCH
-      target: registry.cn-qingdao.aliyuncs.com/wod/cilium-hubble-relay:v1.11.13
+      template: registry.cn-qingdao.aliyuncs.com/wod/cilium-hubble-relay:v1.11.18-ARCH
+      target: registry.cn-qingdao.aliyuncs.com/wod/cilium-hubble-relay:v1.11.18
       username:
         from_secret: REGISTRY_USER_ALIYUN
       password:
@@ -440,8 +440,8 @@ steps:
     image: registry.cn-qingdao.aliyuncs.com/wod/devops-docker-manifest:1.0
     settings:
       platforms: linux/amd64,linux/arm64,linux/ppc64le
-      template: registry.cn-qingdao.aliyuncs.com/wod/cilium-operator-generic:v1.11.13-ARCH
-      target: registry.cn-qingdao.aliyuncs.com/wod/cilium-operator-generic:v1.11.13
+      template: registry.cn-qingdao.aliyuncs.com/wod/cilium-operator-generic:v1.11.18-ARCH
+      target: registry.cn-qingdao.aliyuncs.com/wod/cilium-operator-generic:v1.11.18
       username:
         from_secret: REGISTRY_USER_ALIYUN
       password:

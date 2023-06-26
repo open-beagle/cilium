@@ -9,7 +9,7 @@ git remote add upstream git@github.com:cilium/cilium.git
 
 git fetch upstream
 
-git merge v1.11.13
+git merge v1.11.18
 ```
 
 ## build
@@ -50,17 +50,17 @@ cilium , 编译难度“地狱级”。
 ## hub.docker.com
 
 ```bash
-docker pull cilium/cilium:v1.11.13 && \
-docker tag cilium/cilium:v1.11.13 registry.cn-qingdao.aliyuncs.com/wod/cilium:v1.11.13 && \
-docker push registry.cn-qingdao.aliyuncs.com/wod/cilium:v1.11.13
+docker pull cilium/cilium:v1.11.18 && \
+docker tag cilium/cilium:v1.11.18 registry.cn-qingdao.aliyuncs.com/wod/cilium:v1.11.18 && \
+docker push registry.cn-qingdao.aliyuncs.com/wod/cilium:v1.11.18
 
-docker pull cilium/operator-generic:v1.11.13 && \
-docker tag cilium/operator-generic:v1.11.13 registry.cn-qingdao.aliyuncs.com/wod/cilium-operator-generic:v1.11.13 && \
-docker push registry.cn-qingdao.aliyuncs.com/wod/cilium-operator-generic:v1.11.13
+docker pull cilium/operator-generic:v1.11.18 && \
+docker tag cilium/operator-generic:v1.11.18 registry.cn-qingdao.aliyuncs.com/wod/cilium-operator-generic:v1.11.18 && \
+docker push registry.cn-qingdao.aliyuncs.com/wod/cilium-operator-generic:v1.11.18
 
-docker pull cilium/hubble-relay:v1.11.13 && \
-docker tag cilium/hubble-relay:v1.11.13 registry.cn-qingdao.aliyuncs.com/wod/cilium-hubble-relay:v1.11.13 && \
-docker push registry.cn-qingdao.aliyuncs.com/wod/cilium-hubble-relay:v1.11.13
+docker pull cilium/hubble-relay:v1.11.18 && \
+docker tag cilium/hubble-relay:v1.11.18 registry.cn-qingdao.aliyuncs.com/wod/cilium-hubble-relay:v1.11.18 && \
+docker push registry.cn-qingdao.aliyuncs.com/wod/cilium-hubble-relay:v1.11.18
 ```
 
 ## cache
